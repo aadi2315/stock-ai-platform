@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Stock AI Platform</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;900&family=Nunito:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* ── THEME VARIABLES ─────────────────────────────────────────── */
+    :root[data-theme="dark"] {
+      --bg:          #0a0a0a;
+      --bg2:         #111111;
+      --bg3:         #181818;
+      --gold:        #e8b923;
+      --gold-soft:   #f5d470;
+      --gold-dim:    #7a5f0e;
+      --accent:      #c9921a;
+      --text:        #f0e6c8;
+      --text-muted:  #9b8a60;
+      --border:      #2e2510;
+      --card-bg:     #131006;
+      --glow:        0 0 24px rgba(232,185,35,0.18);
+      --glow-sm:     0 0 10px rgba(232,185,35,0.12);
+      --nav-bg:      rgba(10,10,10,0.96);
+    }
+    :root[data-theme="light"] {
+      --bg:          #dff3fb;
+      --bg2:         #c9eaf7;
+      --bg3:         #b8e0f5;
+      --gold:        #7c4dbb;
+      --gold-soft:   #a077d4;
+      --gold-dim:    #c9adf0;
+      --accent:      #5e35b1;
+      --text:        #1a0a3a;
+      --text-muted:  #5a4080;
+      --border:      #b39ddb;
+      --card-bg:     #eaf6fd;
+      --glow:        0 0 24px rgba(124,77,187,0.15);
+      --glow-sm:     0 0 10px rgba(124,77,187,0.1);
+      --nav-bg:      rgba(223,243,251,0.97);
+    }
+
+    /* ── RESET & BASE ────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      transition: background 0.4s, color 0.4s;
+    }
+
+    /* ── HEADER / NAV ────────────────────────────────────────────── */
+    header {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--nav-bg);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 68px;
+      box-shadow: var(--glow-sm);
+      transition: background 0.4s, border-color 0.4s;
+    }
+    .logo {
+      font-family: 'Cinzel', serif;
+      font-size: 1.45rem;
+      font-weight: 900;
+      color: var(--gold);
+      letter-spacing: 2px;
+      text-shadow: 0 0 18px rgba(232,185,35,0.4);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .logo span { font-size: 1.6rem; }
+    nav { display: flex; gap: 6px; align-items: center; }
+    nav a {
+      text-decoration: none;
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      padding: 6px 14px;
+      border-radius: 6px;
+      transition: color 0.2s, background 0.2s;
+    }
+    nav a:hover { color: var(--gold); background: rgba(232,185,35,0.07); }
+
+    .theme-toggle {
+      cursor: pointer;
+      background: var(--card-bg);
+      border: 1.5px solid var(--border);
+      color: var(--gold);
+      border-radius: 50px;
+      padding: 6px 16px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      transition: all 0.25s;
+      margin-left: 10px;
+    }
+    .theme-toggle:hover { background: var(--gold); color: var(--bg); }
+
+    /* ── SLIDE CONTAINER ─────────────────────────────────────────── */
+    .slides-wrapper {
+      overflow: hidden;
+      position: relative;
+    }
+    .slide {
+      display: none;
+      min-height: calc(100vh - 68px);
+      animation: fadeIn 0.5s ease;
+    }
+    .slide.active { display: block; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── SECTION TITLE ───────────────────────────────────────────── */
+    .section-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1.8rem;
+      font-weight: 600;
+      color: var(--gold);
+      letter-spacing: 2px;
+      margin-bottom: 0.4rem;
+    }
+    .section-sub {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-bottom: 2.4rem;
+      letter-spacing: 0.5px;
+    }
+    .gold-line {
+      width: 60px; height: 3px;
+      background: linear-gradient(90deg, var(--gold), transparent);
+      margin: 10px 0 22px;
+      border-radius: 2px;
+    }
+
+    /* ── HERO SLIDE ──────────────────────────────────────────────── */
+    #slide-home {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center;
+      padding: 60px 2rem;
+      background: radial-gradient(ellipse 70% 50% at 50% 40%, rgba(232,185,35,0.07) 0%, transparent 70%);
+    }
+    #slide-home.active { display: flex; }
+    .hero-badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--gold);
+      border: 1px solid var(--gold-dim);
+      padding: 5px 18px;
+      border-radius: 50px;
+      margin-bottom: 1.8rem;
+      background: rgba(232,185,35,0.06);
+    }
+    .hero-title {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(2.4rem, 6vw, 4.8rem);
+      font-weight: 900;
+      line-height: 1.1;
+      color: var(--text);
+      margin-bottom: 1.2rem;
+    }
+    .hero-title em {
+      color: var(--gold);
+      font-style: normal;
+      text-shadow: 0 0 30px rgba(232,185,35,0.4);
+    }
+    .hero-desc {
+      max-width: 560px;
+      color: var(--text-muted);
+      font-size: 1.05rem;
+      line-height: 1.7;
+      margin-bottom: 2.8rem;
+    }
+    .hero-btns { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+    .btn-primary {
+      background: var(--gold);
+      color: #0a0800;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 800;
+      font-size: 0.88rem;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 14px 34px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 20px rgba(232,185,35,0.3);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(232,185,35,0.4); }
+    .btn-outline {
+      background: transparent;
+      color: var(--gold);
+      font-family: 'Nunito', sans-serif;
+      font-weight: 800;
+      font-size: 0.88rem;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 13px 34px;
+      border-radius: 8px;
+      border: 1.5px solid var(--gold);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-outline:hover { background: rgba(232,185,35,0.08); }
+
+    .hero-stats {
+      display: flex; gap: 3rem; margin-top: 4rem;
+      flex-wrap: wrap; justify-content: center;
+    }
+    .stat { text-align: center; }
+    .stat-num {
+      font-family: 'Cinzel', serif;
+      font-size: 2rem;
+      font-weight: 900;
+      color: var(--gold);
+    }
+    .stat-label { font-size: 0.78rem; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; margin-top: 4px; }
+
+    /* ── STOCK INFO SLIDE ────────────────────────────────────────── */
+    #slide-stock { padding: 60px 2rem; max-width: 1000px; margin: 0 auto; }
+    #slide-stock.active { display: block; }
+
+    .stock-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 36px;
+      box-shadow: var(--glow);
+      position: relative;
+      overflow: hidden;
+      transition: background 0.4s, border-color 0.4s;
+    }
+    .stock-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, var(--gold), var(--accent), transparent);
+    }
+    .stock-header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      flex-wrap: wrap; gap: 20px; margin-bottom: 28px;
+    }
+    .stock-ticker {
+      font-family: 'Cinzel', serif;
+      font-size: 0.78rem;
+      letter-spacing: 2px;
+      color: var(--gold);
+      background: rgba(232,185,35,0.09);
+      border: 1px solid var(--gold-dim);
+      padding: 4px 12px;
+      border-radius: 4px;
+      margin-bottom: 8px;
+      display: inline-block;
+    }
+    .stock-name {
+      font-family: 'Cinzel', serif;
+      font-size: 1.9rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .stock-price-block { text-align: right; }
+    .price-label { font-size: 0.75rem; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; }
+    .price-big {
+      font-family: 'Cinzel', serif;
+      font-size: 2.8rem;
+      font-weight: 900;
+      color: var(--gold);
+      line-height: 1;
+      text-shadow: 0 0 20px rgba(232,185,35,0.3);
+    }
+    .price-change { font-size: 0.95rem; font-weight: 700; color: #4caf50; margin-top: 4px; }
+    .price-change.down { color: #f44336; }
+
+    .stock-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 16px; margin-bottom: 28px;
+    }
+    .stock-meta {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      transition: background 0.4s;
+    }
+    .meta-key { font-size: 0.72rem; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+    .meta-val { font-size: 1.05rem; font-weight: 700; color: var(--text); }
+    .meta-val.gold { color: var(--gold); }
+
+    .stock-desc {
+      line-height: 1.75;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      border-top: 1px solid var(--border);
+      padding-top: 20px;
+    }
+    .stock-desc strong { color: var(--text); }
+
+    /* Sector badge */
+    .sector-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(232,185,35,0.08);
+      border: 1px solid var(--gold-dim);
+      color: var(--gold-soft);
+      padding: 5px 14px; border-radius: 50px;
+      font-size: 0.78rem; font-weight: 700; letter-spacing: 1px;
+      margin-bottom: 24px;
+    }
+
+    /* ── FINANCIAL LITERACY SLIDE ────────────────────────────────── */
+    #slide-literacy { padding: 60px 2rem; max-width: 1100px; margin: 0 auto; }
+    #slide-literacy.active { display: block; }
+
+    .terms-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    .term-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 28px 24px;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.25s, box-shadow 0.25s, background 0.4s;
+      cursor: default;
+    }
+    .term-card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--glow);
+    }
+    .term-card::after {
+      content: '';
+      position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .term-card:hover::after { opacity: 1; }
+    .term-icon {
+      font-size: 2rem;
+      margin-bottom: 14px;
+      display: block;
+    }
+    .term-word {
+      font-family: 'Cinzel', serif;
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--gold);
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+    }
+    .term-def {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+    .term-example {
+      margin-top: 10px;
+      font-size: 0.78rem;
+      color: var(--gold-soft);
+      font-style: italic;
+      border-left: 2px solid var(--gold-dim);
+      padding-left: 10px;
+    }
+
+    /* ── PREDICTION SLIDE ────────────────────────────────────────── */
+    #slide-prediction { padding: 60px 2rem; max-width: 1000px; margin: 0 auto; }
+    #slide-prediction.active { display: block; }
+
+    .trend-badges {
+      display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 32px;
+    }
+    .trend-badge {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 22px; border-radius: 50px;
+      font-weight: 700; font-size: 0.85rem; letter-spacing: 1px;
+      border: 1.5px solid;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .trend-badge.up   { color: #4caf50; border-color: #4caf5060; background: rgba(76,175,80,0.07); }
+    .trend-badge.down { color: #f44336; border-color: #f4433660; background: rgba(244,67,54,0.07); }
+    .trend-badge.stable { color: var(--gold); border-color: var(--gold-dim); background: rgba(232,185,35,0.07); }
+    .trend-badge.active-badge { transform: scale(1.05); box-shadow: 0 0 16px currentColor; }
+
+    .chart-container {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+      margin-bottom: 24px;
+      position: relative;
+      box-shadow: var(--glow-sm);
+      transition: background 0.4s;
+    }
+    .chart-title {
+      font-family: 'Cinzel', serif;
+      font-size: 0.85rem;
+      letter-spacing: 1.5px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 18px;
+    }
+
+    .ai-insight {
+      background: linear-gradient(135deg, rgba(232,185,35,0.07), rgba(201,146,26,0.04));
+      border: 1px solid var(--gold-dim);
+      border-radius: 12px;
+      padding: 22px 24px;
+      display: flex; gap: 16px; align-items: flex-start;
+    }
+    .ai-icon { font-size: 1.8rem; flex-shrink: 0; }
+    .ai-label {
+      font-size: 0.72rem; letter-spacing: 2px; text-transform: uppercase;
+      color: var(--gold); font-weight: 700; margin-bottom: 6px;
+    }
+    .ai-text { font-size: 0.92rem; color: var(--text-muted); line-height: 1.7; }
+    .ai-text strong { color: var(--text); }
+
+    .pred-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 14px; margin-top: 22px;
+    }
+    .pred-box {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      text-align: center;
+      transition: background 0.4s;
+    }
+    .pred-box-label { font-size: 0.7rem; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+    .pred-box-val { font-family: 'Cinzel', serif; font-size: 1.1rem; font-weight: 700; color: var(--gold); }
+
+    /* ── FOOTER ──────────────────────────────────────────────────── */
+    footer {
+      background: var(--bg2);
+      border-top: 1px solid var(--border);
+      padding: 32px 2rem;
+      text-align: center;
+      transition: background 0.4s;
+    }
+    .footer-logo {
+      font-family: 'Cinzel', serif;
+      font-size: 1.2rem;
+      font-weight: 900;
+      color: var(--gold);
+      margin-bottom: 8px;
+    }
+    .footer-note { font-size: 0.8rem; color: var(--text-muted); line-height: 1.7; }
+    .footer-divider { width: 60px; height: 1px; background: var(--border); margin: 14px auto; }
+
+    /* ── BOTTOM NAV (slide dots) ─────────────────────────────────── */
+    .slide-nav {
+      position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+      display: flex; gap: 10px; align-items: center;
+      background: var(--nav-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: 50px;
+      padding: 10px 20px;
+      z-index: 99;
+      box-shadow: var(--glow-sm);
+    }
+    .slide-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: var(--border);
+      cursor: pointer; transition: all 0.25s;
+      border: 1.5px solid var(--text-muted);
+    }
+    .slide-dot.active {
+      background: var(--gold);
+      border-color: var(--gold);
+      width: 28px; border-radius: 5px;
+      box-shadow: 0 0 10px rgba(232,185,35,0.5);
+    }
+    .nav-arrow {
+      background: none; border: none;
+      color: var(--text-muted); cursor: pointer;
+      font-size: 1.1rem; padding: 2px 8px;
+      transition: color 0.2s;
+    }
+    .nav-arrow:hover { color: var(--gold); }
+
+    /* ── RESPONSIVE ──────────────────────────────────────────────── */
+    @media (max-width: 640px) {
+      nav a { display: none; }
+      .hero-title { font-size: 2.2rem; }
+      .stock-header { flex-direction: column; }
+      .stock-price-block { text-align: left; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── HEADER ───────────────────────────────────────────────────── -->
+<header>
+  <div class="logo"><span>◈</span> STOCK AI</div>
+  <nav>
+    <a href="#" onclick="showSlide(0)">Home</a>
+    <a href="#" onclick="showSlide(1)">Stock Info</a>
+    <a href="#" onclick="showSlide(2)">Learn</a>
+    <a href="#" onclick="showSlide(3)">Prediction</a>
+  </nav>
+  <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">☀ Light Mode</button>
+</header>
+
+<!-- ── SLIDES ────────────────────────────────────────────────────── -->
+<div class="slides-wrapper">
+
+  <!-- SLIDE 0: HOME -->
+  <section class="slide active" id="slide-home">
+    <div class="hero-badge">📈 AI-Powered · Financial Literacy Platform</div>
+    <h1 class="hero-title">Understand the<br><em>Stock Market</em><br>Like a Pro</h1>
+    <p class="hero-desc">
+      A beginner-friendly platform to explore Indian stock data,
+      learn financial terms, and understand market trends using AI insights.
+    </p>
+    <div class="hero-btns">
+      <button class="btn-primary" onclick="showSlide(1)">Explore Stocks →</button>
+      <button class="btn-outline" onclick="showSlide(2)">Learn Terms</button>
+    </div>
+    <div class="hero-stats">
+      <div class="stat"><div class="stat-num">₹2,843</div><div class="stat-label">Reliance Today</div></div>
+      <div class="stat"><div class="stat-num">5+</div><div class="stat-label">Terms Explained</div></div>
+      <div class="stat"><div class="stat-num">AI</div><div class="stat-label">Trend Analysis</div></div>
+      <div class="stat"><div class="stat-num">3</div><div class="stat-label">Sections</div></div>
+    </div>
+  </section>
+
+  <!-- SLIDE 1: STOCK INFO -->
+  <section class="slide" id="slide-stock">
+    <p class="section-title">Stock Information</p>
+    <div class="gold-line"></div>
+    <p class="section-sub">Live snapshot of a selected Indian stock — updated for this session.</p>
+
+    <div class="stock-card">
+      <div class="stock-header">
+        <div>
+          <div class="stock-ticker">NSE: RELIANCE</div>
+          <div class="stock-name">Reliance Industries Ltd.</div>
+          <div style="margin-top:10px;">
+            <span class="sector-badge">⚡ Energy &amp; Petrochemicals</span>
+          </div>
+        </div>
+        <div class="stock-price-block">
+          <div class="price-label">Current Price</div>
+          <div class="price-big">₹2,843</div>
+          <div class="price-change">▲ +1.24% (+34.80)</div>
+        </div>
+      </div>
+
+      <div class="stock-grid">
+        <div class="stock-meta">
+          <div class="meta-key">Market Cap</div>
+          <div class="meta-val gold">₹19.24 Lakh Cr</div>
+        </div>
+        <div class="stock-meta">
+          <div class="meta-key">52W High</div>
+          <div class="meta-val">₹3,217</div>
+        </div>
+        <div class="stock-meta">
+          <div class="meta-key">52W Low</div>
+          <div class="meta-val">₹2,184</div>
+        </div>
+        <div class="stock-meta">
+          <div class="meta-key">P/E Ratio</div>
+          <div class="meta-val">24.8</div>
+        </div>
+        <div class="stock-meta">
+          <div class="meta-key">Dividend Yield</div>
+          <div class="meta-val gold">0.37%</div>
+        </div>
+        <div class="stock-meta">
+          <div class="meta-key">Volume (Today)</div>
+          <div class="meta-val">62.4 L Shares</div>
+        </div>
+      </div>
+
+      <div class="stock-desc">
+        <strong>About the Company:</strong><br><br>
+        Reliance Industries Limited is India's largest company by market capitalisation and revenue. 
+        Founded in 1966 by Dhirubhai Ambani, it has grown into a global conglomerate. 
+        The company operates across <strong>energy, petrochemicals, retail, digital services (Jio), 
+        and media</strong>. Reliance Retail is India's largest retailer, and Jio is India's 
+        biggest telecom provider. Headquartered in <strong>Mumbai, Maharashtra</strong>, it employs 
+        over 2,36,000 people and is listed on both NSE and BSE.
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 2: FINANCIAL LITERACY -->
+  <section class="slide" id="slide-literacy">
+    <p class="section-title">Financial Literacy</p>
+    <div class="gold-line"></div>
+    <p class="section-sub">Master these 6 essential terms before you begin investing.</p>
+
+    <div class="terms-grid">
+      <div class="term-card">
+        <span class="term-icon">📊</span>
+        <div class="term-word">Stock</div>
+        <div class="term-def">A stock represents a small unit of ownership in a company. When you buy a stock, you become a part-owner (shareholder) of that business.</div>
+        <div class="term-example">e.g. Buying 1 share of Reliance makes you a tiny co-owner of Reliance Industries.</div>
+      </div>
+      <div class="term-card">
+        <span class="term-icon">🪙</span>
+        <div class="term-word">Share</div>
+        <div class="term-def">A share is the individual unit of a company's stock. A company divides its total value into millions of shares which are sold publicly.</div>
+        <div class="term-example">e.g. TCS has issued ~3.6 billion shares in the market.</div>
+      </div>
+      <div class="term-card">
+        <span class="term-icon">💰</span>
+        <div class="term-word">Investment</div>
+        <div class="term-def">Putting your money into stocks, bonds, or assets with the goal of growing it over time. Investing involves risk but also potential reward.</div>
+        <div class="term-example">e.g. Investing ₹10,000 in Infosys 10 years ago would be worth ₹80,000+ today.</div>
+      </div>
+      <div class="term-card">
+        <span class="term-icon">📈</span>
+        <div class="term-word">Profit</div>
+        <div class="term-def">Profit is the gain you make when the value of your investment increases or when a company earns more than it spends.</div>
+        <div class="term-example">e.g. Buy at ₹500, sell at ₹700 → Profit of ₹200 per share.</div>
+      </div>
+      <div class="term-card">
+        <span class="term-icon">⚠️</span>
+        <div class="term-word">Risk</div>
+        <div class="term-def">The possibility that your investment might lose value. Higher potential returns usually come with higher risk. Always assess risk before investing.</div>
+        <div class="term-example">e.g. A small startup stock has high risk but also high growth potential.</div>
+      </div>
+      <div class="term-card">
+        <span class="term-icon">💵</span>
+        <div class="term-word">Dividend</div>
+        <div class="term-def">A portion of a company's profit paid out to shareholders regularly. It's a reward for holding the company's stock — like earning interest.</div>
+        <div class="term-example">e.g. Reliance paid ₹9 per share as dividend in 2024.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 3: PREDICTION -->
+  <section class="slide" id="slide-prediction">
+    <p class="section-title">Prediction &amp; Trend Analysis</p>
+    <div class="gold-line"></div>
+    <p class="section-sub">AI-assisted trend indicator for Reliance Industries (last 12 months).</p>
+
+    <div class="trend-badges">
+      <div class="trend-badge up active-badge" onclick="switchChart('up', this)">▲ Upward Trend</div>
+      <div class="trend-badge down" onclick="switchChart('down', this)">▼ Downward Trend</div>
+      <div class="trend-badge stable" onclick="switchChart('stable', this)">◆ Stable / Sideways</div>
+    </div>
+
+    <div class="chart-container">
+      <div class="chart-title">Reliance Industries — 12 Month Price Movement (₹)</div>
+      <canvas id="stockChart" height="100"></canvas>
+    </div>
+
+    <div class="ai-insight">
+      <div class="ai-icon">🤖</div>
+      <div>
+        <div class="ai-label">AI Insight — Trend Summary</div>
+        <div class="ai-text" id="aiInsightText">
+          <strong>Current Trend: Upward ▲</strong> — Reliance Industries has shown a steady upward trajectory over the past year, supported by strong earnings from Jio and Retail segments. The stock has recovered from its 52-week low of ₹2,184 and is trading near ₹2,843. Based on historical data, the trend indicates <strong>continued moderate growth</strong> in the short term. Investors with a <strong>medium to long-term horizon</strong> may find this stock relatively stable.
+        </div>
+      </div>
+    </div>
+
+    <div class="pred-grid">
+      <div class="pred-box">
+        <div class="pred-box-label">Short-Term (1M)</div>
+        <div class="pred-box-val" style="color:#4caf50">▲ Bullish</div>
+      </div>
+      <div class="pred-box">
+        <div class="pred-box-label">Mid-Term (3M)</div>
+        <div class="pred-box-val" style="color:#4caf50">▲ Positive</div>
+      </div>
+      <div class="pred-box">
+        <div class="pred-box-label">Confidence</div>
+        <div class="pred-box-val">72%</div>
+      </div>
+      <div class="pred-box">
+        <div class="pred-box-label">Target Price</div>
+        <div class="pred-box-val">₹3,100</div>
+      </div>
+    </div>
+  </section>
+
+</div><!-- /slides-wrapper -->
+
+<!-- ── FOOTER ────────────────────────────────────────────────────── -->
+<footer>
+  <div class="footer-logo">◈ STOCK AI PLATFORM</div>
+  <div class="footer-divider"></div>
+  <div class="footer-note">
+    Financial Literacy Project · JG University<br>
+    Built with HTML, CSS &amp; JavaScript · Data shown is for educational purposes only.<br>
+    © 2026 — Not financial advice.
+  </div>
+</footer>
+
+<!-- ── BOTTOM SLIDE NAVIGATION ───────────────────────────────────── -->
+<div class="slide-nav">
+  <button class="nav-arrow" onclick="prevSlide()">‹</button>
+  <div class="slide-dot active" onclick="showSlide(0)" title="Home"></div>
+  <div class="slide-dot" onclick="showSlide(1)" title="Stock Info"></div>
+  <div class="slide-dot" onclick="showSlide(2)" title="Learn"></div>
+  <div class="slide-dot" onclick="showSlide(3)" title="Prediction"></div>
+  <button class="nav-arrow" onclick="nextSlide()">›</button>
+</div>
+
+<!-- ── SCRIPTS ───────────────────────────────────────────────────── -->
+<script>
+  /* ── Slide Logic ──────────────────────────────────────────────── */
+  const slides = document.querySelectorAll('.slide');
+  const dots   = document.querySelectorAll('.slide-dot');
+  let current  = 0;
+
+  function showSlide(n) {
+    slides[current].classList.remove('active');
+    dots[current].classList.remove('active');
+    current = (n + slides.length) % slides.length;
+    slides[current].classList.add('active');
+    dots[current].classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (current === 3) setTimeout(initChart, 120);
+  }
+  function nextSlide() { showSlide(current + 1); }
+  function prevSlide() { showSlide(current - 1); }
+
+  /* Keyboard navigation */
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') nextSlide();
+    if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   prevSlide();
+  });
+
+  /* ── Theme Toggle ─────────────────────────────────────────────── */
+  function toggleTheme() {
+    const html = document.documentElement;
+    const btn  = document.getElementById('themeBtn');
+    if (html.dataset.theme === 'dark') {
+      html.dataset.theme = 'light';
+      btn.textContent = '🌙 Dark Mode';
+    } else {
+      html.dataset.theme = 'dark';
+      btn.textContent = '☀ Light Mode';
+    }
+    if (chartInstance) {
+      setTimeout(() => { chartInstance.destroy(); chartInstance = null; initChart(); }, 50);
+    }
+  }
+
+  /* ── Chart.js ─────────────────────────────────────────────────── */
+  let chartInstance = null;
+  const months = ['Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar'];
+
+  const chartData = {
+    up:     [2184,2260,2330,2410,2480,2540,2620,2690,2730,2780,2820,2843],
+    down:   [3217,3100,2980,2850,2700,2580,2460,2350,2250,2200,2160,2184],
+    stable: [2550,2600,2530,2570,2610,2560,2590,2540,2580,2610,2570,2595],
+  };
+
+  const insightTexts = {
+    up:     '<strong>Current Trend: Upward ▲</strong> — Reliance has shown steady growth over the past year, driven by strong Jio and Retail revenues. The stock recovered from its 52W low of ₹2,184 to ₹2,843. Analysts project <strong>continued moderate growth</strong>. Suitable for medium to long-term investors.',
+    down:   '<strong>Trend Shown: Downward ▼</strong> — A hypothetical bearish scenario showing a correction from highs of ₹3,217. Such corrections can happen due to global factors, FII selling, or sector headwinds. It is important to understand that corrections are a <strong>normal part of market cycles</strong>.',
+    stable: '<strong>Trend Shown: Stable / Sideways ◆</strong> — The stock moves within a narrow band, indicating market indecision. This could be due to mixed signals in earnings or global uncertainty. Sideways trends often precede a <strong>breakout</strong> in either direction.'
+  };
+
+  function getThemeColor() {
+    return document.documentElement.dataset.theme === 'dark' ? '#e8b923' : '#7c4dbb';
+  }
+  function getGridColor() {
+    return document.documentElement.dataset.theme === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.07)';
+  }
+  function getTextColor() {
+    return document.documentElement.dataset.theme === 'dark' ? '#9b8a60' : '#5a4080';
+  }
+
+  function initChart(type = 'up') {
+    if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+    const ctx = document.getElementById('stockChart').getContext('2d');
+    const color = getThemeColor();
+
+    const grad = ctx.createLinearGradient(0, 0, 0, 280);
+    grad.addColorStop(0, color + '40');
+    grad.addColorStop(1, color + '03');
+
+    chartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: months,
+        datasets: [{
+          label: 'Price (₹)',
+          data: chartData[type],
+          borderColor: color,
+          backgroundColor: grad,
+          borderWidth: 2.5,
+          pointRadius: 4,
+          pointBackgroundColor: color,
+          pointBorderColor: '#0a0a0a',
+          pointBorderWidth: 2,
+          tension: 0.4,
+          fill: true,
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#111',
+            borderColor: color,
+            borderWidth: 1,
+            titleColor: color,
+            bodyColor: '#f0e6c8',
+            padding: 12,
+            callbacks: {
+              label: ctx => ' ₹' + ctx.parsed.y.toLocaleString('en-IN')
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { color: getGridColor() },
+            ticks: { color: getTextColor(), font: { family: 'Nunito', size: 11 } }
+          },
+          y: {
+            grid: { color: getGridColor() },
+            ticks: {
+              color: getTextColor(),
+              font: { family: 'Nunito', size: 11 },
+              callback: v => '₹' + v.toLocaleString('en-IN')
+            }
+          }
+        }
+      }
+    });
+    currentChartType = type;
+  }
+
+  let currentChartType = 'up';
+
+  function switchChart(type, el) {
+    document.querySelectorAll('.trend-badge').forEach(b => b.classList.remove('active-badge'));
+    el.classList.add('active-badge');
+    document.getElementById('aiInsightText').innerHTML = insightTexts[type];
+    if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+    initChart(type);
+  }
+
+  /* Init chart when slide 3 is first shown */
+</script>
+</body>
+</html>
